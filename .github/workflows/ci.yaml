@@ -3,8 +3,6 @@
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
 
 jobs:
   test:
@@ -25,7 +23,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt pytest httpx
 
-      - name: Verify Module Imports & App Health
+      - name: Verify App Health
         run: |
           python -c "import main; print('FastAPI imported successfully')"
 
@@ -37,19 +35,37 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
       - name: Build Local Image
         run: |
           docker build -t cloudops-backend:${{ github.sha }} .
 
-      - name: Run Trivy Vulnerability Scanner
+      - name: Run Trivy Scanner
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: 'cloudops-backend:${{ github.sha }}'
           format: 'table'
           exit-code: '0'
-          ignore-unfixed: true
-          vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
+
+  update-gitops:
+    name: Automated GitOps Sync
+    needs: security-scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout GitOps Repo
+        uses: actions/checkout@v4
+        with:
+          repository: 'Anandking-21/cloudops-gitops'
+          token: ${{ secrets.GITOPS_TOKEN }}
+          ref: 'main'
+
+      - name: Update Deployment Image Tag
+        run: |
+          sed -i 's|image: cloudops-backend:.*|image: cloudops-backend:${{ github.sha }}|g' deployment.yaml
+
+      - name: Commit & Push New Image to GitOps
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add deployment.yaml
+          git diff --staged --quiet || (git commit -m "deploy: update image tag to ${{ github.sha }} [skip ci]" && git push origin main)
