@@ -1,60 +1,32 @@
-\# CloudOps: GitOps \& DevSecOps Automated Platform
+📸 Proof of Execution & Evidence
+1. Automated DevSecOps Pipeline (GitHub Actions)
+Every push triggers static analysis, containerization, Trivy CVE scanning, and a cross-repository manifest update.
 
+2. GitOps Continuous Delivery (ArgoCD)
+Live cluster state synchronized declaratively from Git manifests with zero configuration drift.
 
+3. Dynamic Horizontal Pod Autoscaling (HPA)
+Traffic load automatically scales the FastAPI deployment from 2 to 6 replicas based on real-time CPU telemetry.
 
-An enterprise-grade, end-to-end Kubernetes platform demonstrating modern \*\*GitOps Continuous Delivery (ArgoCD)\*\*, \*\*Automated DevSecOps (Trivy CVE Scanning)\*\*, \*\*Dynamic Auto-Scaling (HPA v2)\*\*, and \*\*Declarative Infrastructure-as-Code (Terraform)\*\* across a multi-node cluster topology.
+4. Telemetry & Health Endpoints
+Microservice exposing structured health checks and Prometheus-compliant metric streams:
 
+/healthz -> {"status":"healthy"} (HTTP 200)
 
+/metrics -> Prometheus metrics formatted for scraping
 
-\---
+🛠 Tech Stack & Tools
+Orchestration: Kubernetes v1.31 (Kind multi-node topology: 1 control plane, 2 workers)
 
+Continuous Delivery (GitOps): ArgoCD v3.5
 
+CI & Security: GitHub Actions, Aqua Security Trivy, Docker Buildx
 
-\## 🏗 Architecture \& Delivery Flow
+Infrastructure as Code (IaC): Terraform (HashiCorp Kubernetes & Kind providers)
 
+Application Runtime: Python 3.11, FastAPI, Uvicorn, Pydantic
 
+📂 Repository Topology
+Application Code & CI: cloudops-app
 
-```text
-
-\[Developer Commit / PR]
-
-&#x20;      │
-
-&#x20;      ▼
-
-\[GitHub Actions CI/CD]
-
-&#x20;  ├── 1. Unit \& Smoke Tests (Python 3.11 / FastAPI)
-
-&#x20;  ├── 2. Multi-Stage Docker Image Build
-
-&#x20;  ├── 3. DevSecOps Container Scan (Aqua Security Trivy - High/Crit Gates)
-
-&#x20;  └── 4. Automated Manifest Sync (Commit commit SHA to GitOps repo via PAT)
-
-&#x20;      │
-
-&#x20;      ▼
-
-\[GitHub: cloudops-gitops] ──(Declarative State of Truth)
-
-&#x20;      │
-
-&#x20;      ▼ (Poll / Webhook Reconciliation)
-
-\[ArgoCD Controller (In-Cluster)]
-
-&#x20;      │
-
-&#x20;      ▼ (Automated Zero-Downtime Rolling Update)
-
-\[Kind Multi-Node Cluster]
-
-&#x20;  ├── Control Plane (NGINX Ingress Controller)
-
-&#x20;  ├── Worker 1 \& Worker 2
-
-&#x20;  ├── Kubernetes Metrics Server (Kubelet Telemetry)
-
-&#x20;  └── HPA Engine (Target: 50% CPU | Replicas: 2 Min – 6 Max)
-
+Kubernetes Manifests & IaC: cloudops-gitops
